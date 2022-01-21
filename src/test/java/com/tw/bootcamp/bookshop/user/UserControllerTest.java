@@ -1,6 +1,7 @@
 package com.tw.bootcamp.bookshop.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -49,31 +50,5 @@ class UserControllerTest {
                 .andExpect(content().string(objectMapper.writeValueAsString(userResponse)));
 
         verify(userService, times(1)).create(userCredentials);
-    }
-
-    @Test
-    void shouldRespondWithErrorMessageWhenCreateUserFails() throws Exception {
-        CreateUserRequest userCredentials = buildCreateUserRequest();
-        when(userService.create(userCredentials)).thenThrow(new InvalidEmailException());
-
-        mockMvc.perform(post("/users")
-                .content(objectMapper.writeValueAsString(userCredentials))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("User with same email already created"));
-    }
-
-    @Test
-    void shouldRespondWithErrorMessageWhenCreateUserValidationFails() throws Exception {
-        CreateUserRequest userCredentials = new CreateUserRequest("", "foobar");
-        Set<ConstraintViolation<User>> violations = validator.validate(User.create(userCredentials));
-        when(userService.create(userCredentials)).thenThrow(new ConstraintViolationException(violations));
-
-        mockMvc.perform(post("/users")
-                .content(objectMapper.writeValueAsString(userCredentials))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errors.email").value("Email is mandatory"));
     }
 }
